@@ -9,3 +9,6 @@
 ## ADMIN
 ### Username: Admin
 ### Password: AdminDjango
+
+## Youtube API
+### In ./firstApp/youtubeAPIConfig.py : set the value of developerKey arg in build function to your YOUTUBE API KEY
