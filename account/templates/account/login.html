@@ -1,0 +1,28 @@
+{% extends "firstApp/base.html" %}
+{% load crispy_forms_tags %}
+{% block mainbody %}
+    <div class="col-md-6 offset-md-3 bg-white rounded rounded-lg p-3" >
+        <form method="POST">
+            {% csrf_token %} 
+            <fieldset class="form-group" >
+                <legend class="text-primary" >User Login</legend>
+                <div class="form-group" >
+                    {{form | crispy}}
+                </div>
+            </fieldset>
+            <div class="form-group" >
+                <button class="btn btn-outline-primary" type="submit"> Login </button>
+                <a class="btn btn-outline-secondary" href="{% url 'app-home' %}">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock mainbody %}
+
+{% block scripts %}
+    <script>
+        function func_onload(){
+            document.getElementById('loginLink').classList.add('active');
+        }
+        window.onload = func_onload;
+    </script>
+{% endblock scripts %}

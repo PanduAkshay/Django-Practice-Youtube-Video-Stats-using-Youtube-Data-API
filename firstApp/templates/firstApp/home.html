@@ -1,0 +1,210 @@
+{% extends "firstApp/base.html" %}
+{% load crispy_forms_tags %}
+{% block mainbody %}
+     <div class="bg-white col-md-8 offset-md-2 border rounded rounded-lg mt-2" style="height: 100%;" >
+        <div class="border-bottom" >
+            <form method="POST" class="form-group">
+                {% csrf_token %} 
+                <legend class="text-primary" >Get Video</legend>
+                <div class="form-group" >
+                    {{get_video_form | crispy}}
+                </div>
+                <div class="form-group" >
+                    <button class="btn btn-outline-primary col-4 offset-4" type="submit"> Get </button>
+                </div>
+            </form>
+        </div>
+        {% if video %}
+        <div>
+            <h3 class="text-center" >Video: {{video.title}}&nbsp;
+                <small><a href="{{video.url}}">Link <i class="fa fa-share"></i> </a></small>
+            </h3>
+
+            <div class="border-dark col-6 offset-3 border rounded rounded-lg embed-responsive embed-responsive-16by9 p-2">
+                <img class="embed-responsive-item" src="{{video.thumbnail}}" alt="thumbnail-{{video.title}}" />
+            </div>
+
+            <p class="mt-4" >Channel: <a href="{{video.channel_link}}">{{video.channel_name}}</a> </p>
+            <p> Video Rating:&nbsp;{{video.rating}}</p>
+
+            <p> Video Keywords:&nbsp; 
+                {% for word in video.keywords %}
+                    <small>{{word}}&nbsp;</small>
+                {% endfor %}
+            </p>
+
+            <p>Uploaded On: {{video.upload_date}}</p>
+
+            <p>Video Duration: {{video.duration.hours}} hours, {{video.duration.minutes}} minutes, {{video.duration.seconds}} seconds</p>
+            <p class="mt-4 font-weight-bold" style="font-size: 1.5rem;">Views: {{video.viewCount}}</p>
+            
+            <p class="mt-4 font-weight-bold" id="pLike" style="font-size: 1.5rem;">Likes: </p>
+            <div class="col-12 mt-4">
+                <canvas id="myChart2" width="400" height="200"></canvas>
+            </div>
+
+            <p class="mt-4 font-weight-bold" id="pDis" style="font-size: 1.5rem;">Dislikes: </p>
+            <div class="col-12  mt-4">
+                <canvas id="myChart" width="400" height="200"></canvas>
+            </div>
+
+            <p class="mt-4 font-weight-bold" id="pComment" style="font-size: 1.5rem;">Comments: </p>
+            <div class="col-12  mt-4">
+                <canvas id="myChart3" width="400" height="200"></canvas>
+            </div>
+
+        </div>
+        {% endif %}
+
+    </div>
+{% endblock mainbody %}
+
+{% block scripts %}
+
+    <script>
+
+        function func_onload(){
+            document.getElementById('homeLink').classList.add('active');
+        }
+        window.onload = func_onload;
+
+        {% if video %}
+        count=0;
+        var likes_data = [];
+        var dislikes_data = [];
+        var comments_data = [];
+        var labels_data = [];
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var ctx2 = document.getElementById('myChart2').getContext('2d');
+        var ctx3 = document.getElementById('myChart3').getContext('2d');
+
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: '# of Dislikes',
+                    data: [],
+                    backgroundColor : ['#FF0000'],
+                    borderColor:['#FF0000']   
+                }
+            ]
+            },
+        
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                
+                },
+                bezierCurve: true
+            }
+        });
+
+        var myChart2 = new Chart(ctx2,{
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                {
+                    label: '# of Likes',
+                    data: [],
+                    backgroundColor : ['#00FF00'],
+                    borderColor:['#00FF00']   
+                }
+            ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                
+                },
+                bezierCurve: true
+            }
+
+        });
+
+        var myChart3 = new Chart(ctx3,{
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                {
+                    label: '# of Comments',
+                    data: [],
+                    backgroundColor : ['#0000FF'],
+                    borderColor:['#0000FF']   
+                }
+            ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                
+                },
+                bezierCurve: true
+            }
+
+        });
+
+        function fetchData(){
+            var getStats = new XMLHttpRequest();
+            getStats.onreadystatechange = function(){
+                if (this.readyState == 4 && this.status == 200) {
+
+                    if (count==10){
+                        likes_data.shift()
+                        dislikes_data.shift()
+                        comments_data.shift()
+                        labels_data.shift()
+                        
+                    }
+                    else{
+                        count++;
+                    }
+
+                    response = JSON.parse(this.responseText)
+                    
+                    document.getElementById('pLike').innerHTML ="Likes: "+response.like_count
+                    document.getElementById('pDis').innerHTML = "Dislikes: "+ response.dislike_count
+                    document.getElementById('pComment').innerHTML ="Comments: "+ response.comment_count
+
+                    likes_data.push(response.like_count)
+                    dislikes_data.push(response.dislike_count)
+                    comments_data.push(response.comment_count)
+                    labels_data.push(response.label)
+
+                    myChart.data.labels = labels_data;
+                    myChart2.data.labels = labels_data;
+                    myChart3.data.labels = labels_data;
+
+                    myChart.data.datasets[0].data = dislikes_data
+                    myChart2.data.datasets[0].data = likes_data
+                    myChart3.data.datasets[0].data = comments_data
+                    myChart.update()
+                    myChart2.update()
+                    myChart3.update()
+                    
+
+                    
+
+                }
+            }
+            getStats.open("GET", "{% url 'app-video-stats' id=video.id %}", true);
+            getStats.send();
+
+        }
+        window.setInterval(fetchData, 2000)
+        {% endif %}
+
+    </script>
+{% endblock scripts %}
+
+
+

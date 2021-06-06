@@ -1,0 +1,35 @@
+{% extends "firstApp/base.html" %}
+{% block mainbody %}
+    <div class="bg-white col-md-8 offset-md-2 border rounded rounded-lg mt-2" style="height: 98vh;">
+        <h3>Past Searches:
+        </h3>
+        <form class="form-inline mb-2 px-0" action="{% url 'app-clear-history' %}" method="POST">
+            {% csrf_token %} 
+            <button class="btn col-12 btn-outline-danger">Clear All</button>
+        </form>
+        <div class="row" >
+            {% for item in object_list %}
+                <div class="col-8 border" style="overflow-x: hidden;"><small class="text-muted">{{item.videoLink}}&nbsp;</small>@({{item.atdatetime}})</div>
+                <div class="col-4 text-center border" style="padding-y:auto;" >
+                    <a href="{% url 'app-home' pk=item.id %}" class="btn mb-1 mt-1 btn-info" >
+                        Get stats
+                    </a>
+                </div>                
+            {% endfor %}
+        </div>
+
+
+
+        
+    </div>
+    
+{% endblock %}
+
+{% block scripts %}
+  <script>
+       function func_onload(){
+            document.getElementById('historyLink').classList.add('active');
+        }
+        window.onload = func_onload;
+  </script>
+{% endblock scripts %}

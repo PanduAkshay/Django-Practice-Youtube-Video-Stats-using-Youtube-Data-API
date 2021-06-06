@@ -1,0 +1,10 @@
+{% extends "firstApp/base.html" %}
+{% block mainbody %}
+    <div>
+        <h3>Log Out Successful</h3>
+        <p class="border-top" >
+            <a href="{% url 'account-login' %}">Log In Again</a>
+        </p>
+    </div>
+    
+{% endblock mainbody %}
